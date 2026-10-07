@@ -48,6 +48,9 @@ public class ItemRepository {
 
     public List<Item> searchAvailableByText(String text) {
         log.info("ItemRepository: method searchAvailableByText, text - {}",text);
+        if (text == null || text.isBlank()) {
+            return List.of();
+        }
         String lower = text.toLowerCase();
         return storage.values().stream()
                 .filter(i -> Boolean.TRUE.equals(i.getAvailable()))

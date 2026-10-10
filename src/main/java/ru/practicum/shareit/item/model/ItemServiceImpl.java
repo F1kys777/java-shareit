@@ -31,11 +31,11 @@ public class ItemServiceImpl implements ItemService {
         log.info("ItemServiceImpl: method create, в реузльтате был получен объект Item:" +
                 " id - {}, name - {}, description - {}, available status - {}, ownerID - " +
                 "{}, request - {}", item.getId(), item.getName(), item.getDescription(), item.getAvailable(), owner.getId(), item.getRequest());
-        ItemDto itemDto1 = ItemMapper.toItemDto(itemRepository.save(item));
+        ItemDto itemDtoResponse = ItemMapper.toItemDto(itemRepository.save(item));
         log.info("ItemServiceImpl: method create, и преобразован в объект ItemDto:" +
                 " id - {}, name - {}, description - {}, available status - {}, ownerID - " +
-                "{}, requestID - {}", itemDto1.getId(), itemDto1.getName(), itemDto1.getDescription(), itemDto1.getAvailable(), itemDto1.getOwnerId(), itemDto1.getRequestId());
-        return itemDto1;
+                "{}, requestID - {}", itemDtoResponse.getId(), itemDtoResponse.getName(), itemDtoResponse.getDescription(), itemDtoResponse.getAvailable(), itemDtoResponse.getOwnerId(), itemDtoResponse.getRequestId());
+        return itemDtoResponse;
     }
 
     @Override
@@ -60,11 +60,11 @@ public class ItemServiceImpl implements ItemService {
             item.setAvailable(itemDto.getAvailable());
             log.info("ItemServiceImpl: изменение itemId - {}, изменено статус Available:\n было - {}, стало - {}",itemId, itemDto.getAvailable(), item.getAvailable());
         }
-        ItemDto itemDto1 = ItemMapper.toItemDto(itemRepository.update(item));
+        ItemDto itemDtoResponse = ItemMapper.toItemDto(itemRepository.update(item));
         log.info("ItemServiceImpl: method update, и преобразован в объект ItemDto:" +
                 " id - {}, name - {}, description - {}, available status - {}, ownerID - " +
-                "{}, requestID - {}", itemDto1.getId(), itemDto1.getName(), itemDto1.getDescription(), itemDto1.getAvailable(), itemDto1.getOwnerId(), itemDto1.getRequestId());
-        return itemDto1;
+                "{}, requestID - {}", itemDtoResponse.getId(), itemDtoResponse.getName(), itemDtoResponse.getDescription(), itemDtoResponse.getAvailable(), itemDtoResponse.getOwnerId(), itemDtoResponse.getRequestId());
+        return itemDtoResponse;
     }
 
     @Override

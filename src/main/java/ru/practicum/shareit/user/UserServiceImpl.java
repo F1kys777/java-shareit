@@ -26,9 +26,9 @@ public class UserServiceImpl implements UserService {
         user.setId(null);
 
         userRepository.save(user);
-        UserDto userDto1 = UserMapper.toUserDto(user);
-        log.info("UserServiceImpl: method create, результат - {}", userDto1);
-        return userDto1;
+        UserDto userList = UserMapper.toUserDto(user);
+        log.info("UserServiceImpl: method create, результат - {}", userList);
+        return userList;
     }
 
     @Override
@@ -54,9 +54,9 @@ public class UserServiceImpl implements UserService {
         }
 
         User updated = userRepository.update(user);
-        UserDto userDto1 = UserMapper.toUserDto(updated);
-        log.info("UserServiceImpl: method update, результат - {}", userDto1);
-        return userDto1;
+        UserDto userList = UserMapper.toUserDto(updated);
+        log.info("UserServiceImpl: method update, результат - {}", userList);
+        return userList;
     }
 
     @Override
@@ -70,11 +70,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserDto> getAll() {
         log.info("UserServiceImpl: method getAll");
-        List<UserDto> usersDto1 = userRepository.findAll().stream()
+        List<UserDto> userList = userRepository.findAll().stream()
                 .map(UserMapper::toUserDto)
                 .toList();
-        log.info("UserServiceImpl: method getAll, найдено пользователей - {}", usersDto1.size());
-        return usersDto1;
+        log.info("UserServiceImpl: method getAll, найдено пользователей - {}", userList.size());
+        return userList;
     }
 
     @Override

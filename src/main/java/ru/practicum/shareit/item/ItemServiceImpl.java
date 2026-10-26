@@ -75,11 +75,11 @@ public class ItemServiceImpl implements ItemService {
             item.setAvailable(itemDto.getAvailable());
             log.info("ItemServiceImpl: изменение itemId - {}, изменено статус Available:\n было - {}, стало - {}",itemId, itemDto.getAvailable(), item.getAvailable());
         }
-        ItemDto itemDtoResponse = ItemMapper.toItemDto(itemRepository.save(item));
+
         log.info("ItemServiceImpl: method update, и преобразован в объект ItemDto:" +
                 " id - {}, name - {}, description - {}, available status - {}, ownerID - " +
-                "{}", itemDtoResponse.getId(), itemDtoResponse.getName(), itemDtoResponse.getDescription(), itemDtoResponse.getAvailable(), itemDtoResponse.getOwnerId());
-        return itemDtoResponse;
+                "{}", item.getId(), item.getName(), item.getDescription(), item.getAvailable(), item.getOwner().getId());
+        return ItemMapper.toItemDto(item);
     }
 
     @Transactional(readOnly = true)
@@ -88,7 +88,7 @@ public class ItemServiceImpl implements ItemService {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь с id=" + itemId + " не найдена"));
 
-        ItemWithBookingsDto dto = toDto(item);
+        ItemWithBookingsDto dto = ItemMapper.toItemWithBookingsDto(item);
         dto.setComments(commentRepository.findByItem_IdOrderByCreatedDesc(itemId).stream()
                 .map(CommentMapper::toCommentDto).toList());
 
@@ -106,7 +106,7 @@ public class ItemServiceImpl implements ItemService {
         }
         return itemRepository.findByOwner_Id(userId).stream()
                 .map(item -> {
-                    ItemWithBookingsDto dto = toDto(item);
+                    ItemWithBookingsDto dto = ItemMapper.toItemWithBookingsDto(item);
                     dto.setComments(commentRepository.findByItem_IdOrderByCreatedDesc(item.getId()).stream()
                             .map(CommentMapper::toCommentDto).toList());
                     fillBookings(dto, item.getId());
@@ -124,17 +124,6 @@ public class ItemServiceImpl implements ItemService {
         return itemRepository.search(text).stream()
                 .map(ItemMapper::toItemDto)
                 .toList();
-    }
-
-    private ItemWithBookingsDto toDto(Item item) {
-        ItemWithBookingsDto dto = new ItemWithBookingsDto();
-        dto.setId(item.getId());
-        dto.setName(item.getName());
-        dto.setDescription(item.getDescription());
-        dto.setAvailable(item.getAvailable());
-        dto.setOwnerId(item.getOwner().getId());
-        dto.setRequestId(item.getRequest() != null ? item.getRequest().getId() : null);
-        return dto;
     }
 
     private void fillBookings(ItemWithBookingsDto dto, Long itemId) {
@@ -163,12 +152,7 @@ public class ItemServiceImpl implements ItemService {
             throw new ValidationException("Оставить отзыв может только тот, кто брал вещь в аренду после окончания срока");
         }
 
-        Comment comment = new Comment();
-        comment.setText(request.getText());
-        comment.setItem(item);
-        comment.setAuthor(author);
-        comment.setCreated(LocalDateTime.now());
-
+        Comment comment = CommentMapper.toComment(request, item, author);
         return CommentMapper.toCommentDto(commentRepository.save(comment));
     }
 }

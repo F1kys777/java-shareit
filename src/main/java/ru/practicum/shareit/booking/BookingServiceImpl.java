@@ -53,13 +53,7 @@ public class BookingServiceImpl implements BookingService {
             throw new ValidationException("Дата начала не может быть в прошлом");
         }
 
-        Booking booking = new Booking();
-        booking.setStart(request.getStart());
-        booking.setEnd(request.getEnd());
-        booking.setItem(item);
-        booking.setBooker(booker);
-        booking.setStatus(BookingStatus.WAITING);
-
+        Booking booking = BookingMapper.toBooking(request, item, booker);
         Booking saved = bookingRepository.save(booking);
         log.info("BookingServiceImpl: create, создано бронирование id - {}", saved.getId());
         return BookingMapper.toBookingDto(saved);
@@ -83,10 +77,9 @@ public class BookingServiceImpl implements BookingService {
         }
 
         booking.setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
-        Booking saved = bookingRepository.save(booking);
         log.info("BookingServiceImpl: approve, бронирование id - {} переведено в статус {}",
-                saved.getId(), saved.getStatus());
-        return BookingMapper.toBookingDto(saved);
+                booking.getId(), booking.getStatus());
+        return BookingMapper.toBookingDto(booking);
     }
 
     @Override

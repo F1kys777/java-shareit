@@ -6,6 +6,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.practicum.shareit.exception.ConflictException;
+import ru.practicum.shareit.exception.NotFoundException;
 
 import java.util.List;
 
@@ -76,5 +78,26 @@ public class UserControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(userService).delete(1L);
+    }
+
+    @Test
+    void createWithDuplicateEmailShouldReturn409() throws Exception {
+        when(userService.create(any(UserDto.class)))
+                .thenThrow(new ConflictException("Email уже используется"));
+
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Иван\",\"email\":\"ivan@mail.ru\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Email уже используется"));
+    }
+
+    @Test
+    void getByIdUnknownShouldReturn404() throws Exception {
+        when(userService.getById(99L)).thenThrow(new NotFoundException("Пользователь с id=99 не найден"));
+
+        mockMvc.perform(get("/users/99"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Пользователь с id=99 не найден"));
     }
 }

@@ -5,12 +5,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -101,5 +103,18 @@ public class ItemRequestServiceImplIntegrationTest {
 
         assertThat(requests).extracting(ItemRequestDto::getDescription)
                 .containsExactly("Новый запрос", "Старый запрос");
+    }
+
+    @Test
+    void createByUnknownUserShouldThrowNotFound() {
+        ItemRequestDto dto = new ItemRequestDto();
+        dto.setDescription("Нужна дрель");
+
+        assertThrows(NotFoundException.class, () -> itemRequestService.create(999L, dto));
+    }
+
+    @Test
+    void getByIdUnknownShouldThrowNotFound() {
+        assertThrows(NotFoundException.class, () -> itemRequestService.getById(999L));
     }
 }

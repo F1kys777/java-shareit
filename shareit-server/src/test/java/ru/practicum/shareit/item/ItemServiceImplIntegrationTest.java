@@ -11,6 +11,9 @@ import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.comment.Comment;
 import ru.practicum.shareit.comment.CommentRepository;
 import ru.practicum.shareit.comment.dto.NewCommentRequest;
+import ru.practicum.shareit.exception.ForbiddenException;
+import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.request.ItemRequest;
@@ -18,6 +21,7 @@ import ru.practicum.shareit.request.ItemRequestRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDateTime;
 
@@ -140,5 +144,95 @@ public class ItemServiceImplIntegrationTest {
 
         assertThat(itemService.addComment(booker.getId(), item.getId(), request).getText())
                 .isEqualTo("Всё хорошо");
+    }
+
+    @Test
+    void createWithoutRequestShouldSaveItem() {
+        User owner = saveUser("int-item-owner7@mail.ru");
+        ItemDto dto = new ItemDto();
+        dto.setName("Дрель");
+        dto.setDescription("Аккумуляторная");
+        dto.setAvailable(true);
+
+        assertThat(itemService.create(owner.getId(), dto).getRequestId()).isNull();
+    }
+
+    @Test
+    void createByUnknownUserShouldThrowNotFound() {
+        ItemDto dto = new ItemDto();
+        dto.setName("Дрель");
+        dto.setDescription("Аккумуляторная");
+        dto.setAvailable(true);
+
+        assertThrows(NotFoundException.class, () -> itemService.create(999L, dto));
+    }
+
+    @Test
+    void createWithUnknownRequestShouldThrowNotFound() {
+        User owner = saveUser("int-item-owner8@mail.ru");
+        ItemDto dto = new ItemDto();
+        dto.setName("Дрель");
+        dto.setDescription("Аккумуляторная");
+        dto.setAvailable(true);
+        dto.setRequestId(999L);
+
+        assertThrows(NotFoundException.class, () -> itemService.create(owner.getId(), dto));
+    }
+
+    @Test
+    void updateByNotOwnerShouldThrowForbidden() {
+        Item item = saveItem(saveUser("int-item-owner9@mail.ru"), "Дрель", true);
+        User stranger = saveUser("int-item-stranger9@mail.ru");
+        ItemDto patch = new ItemDto();
+        patch.setName("Перфоратор");
+
+        assertThrows(ForbiddenException.class,
+                () -> itemService.update(stranger.getId(), item.getId(), patch));
+    }
+
+    @Test
+    void updateUnknownItemShouldThrowNotFound() {
+        User owner = saveUser("int-item-owner10@mail.ru");
+        ItemDto patch = new ItemDto();
+        patch.setName("Перфоратор");
+
+        assertThrows(NotFoundException.class,
+                () -> itemService.update(owner.getId(), 999L, patch));
+    }
+
+    @Test
+    void getAllByOwnerUnknownUserShouldThrowNotFound() {
+        assertThrows(NotFoundException.class, () -> itemService.getAllByOwner(999L));
+    }
+
+    @Test
+    void addCommentWithoutFinishedBookingShouldThrowValidation() {
+        Item item = saveItem(saveUser("int-item-owner16@mail.ru"), "Дрель", true);
+        User author = saveUser("int-item-author16@mail.ru");
+        NewCommentRequest request = new NewCommentRequest();
+        request.setText("Всё хорошо");
+
+        assertThrows(ValidationException.class,
+                () -> itemService.addComment(author.getId(), item.getId(), request));
+    }
+
+    @Test
+    void addCommentByUnknownUserShouldThrowNotFound() {
+        Item item = saveItem(saveUser("int-item-owner17@mail.ru"), "Дрель", true);
+        NewCommentRequest request = new NewCommentRequest();
+        request.setText("Всё хорошо");
+
+        assertThrows(NotFoundException.class,
+                () -> itemService.addComment(999L, item.getId(), request));
+    }
+
+    @Test
+    void addCommentForUnknownItemShouldThrowNotFound() {
+        User author = saveUser("int-item-author18@mail.ru");
+        NewCommentRequest request = new NewCommentRequest();
+        request.setText("Всё хорошо");
+
+        assertThrows(NotFoundException.class,
+                () -> itemService.addComment(author.getId(), 999L, request));
     }
 }

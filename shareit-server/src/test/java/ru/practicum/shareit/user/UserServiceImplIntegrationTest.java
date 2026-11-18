@@ -5,7 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.exception.ConflictException;
+import ru.practicum.shareit.exception.NotFoundException;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -67,5 +71,41 @@ public class UserServiceImplIntegrationTest {
         userService.delete(created.getId());
 
         assertThat(userRepository.findById(created.getId())).isEmpty();
+    }
+
+    @Test
+    void createWithDuplicateEmailShouldThrowConflict() {
+        userService.create(newUser("Иван", "int-user7@mail.ru"));
+
+        assertThrows(ConflictException.class,
+                () -> userService.create(newUser("Пётр", "int-user7@mail.ru")));
+    }
+
+    @Test
+    void updateWithEmailOfAnotherUserShouldThrowConflict() {
+        userService.create(newUser("Иван", "int-user8@mail.ru"));
+        UserDto second = userService.create(newUser("Пётр", "int-user9@mail.ru"));
+        UserDto patch = new UserDto();
+        patch.setEmail("int-user8@mail.ru");
+
+        assertThrows(ConflictException.class, () -> userService.update(second.getId(), patch));
+    }
+
+    @Test
+    void updateUnknownUserShouldThrowNotFound() {
+        UserDto patch = new UserDto();
+        patch.setName("Пётр");
+
+        assertThrows(NotFoundException.class, () -> userService.update(999L, patch));
+    }
+
+    @Test
+    void getByIdUnknownUserShouldThrowNotFound() {
+        assertThrows(NotFoundException.class, () -> userService.getById(999L));
+    }
+
+    @Test
+    void deleteUnknownUserShouldThrowNotFound() {
+        assertThrows(NotFoundException.class, () -> userService.delete(999L));
     }
 }

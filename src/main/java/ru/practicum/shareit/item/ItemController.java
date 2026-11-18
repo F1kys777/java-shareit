@@ -5,7 +5,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.comment.dto.CommentDto;
+import ru.practicum.shareit.comment.dto.NewCommentRequest;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemWithBookingsDto;
 
 import java.util.List;
 
@@ -39,14 +42,13 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getById(@PathVariable Long itemId) {
-        log.info("ItemController: method getById, itemId - {}", itemId);
-        return itemService.getById(itemId);
+    public ItemWithBookingsDto getById(@RequestHeader(USER_ID_HEADER) Long userId,
+                                       @PathVariable Long itemId) {
+        return itemService.getById(userId, itemId);
     }
 
     @GetMapping
-    public List<ItemDto> getAllByOwner(@RequestHeader(USER_ID_HEADER) Long userId) {
-        log.info("ItemController: method getAllByOwner, userId - {}", userId);
+    public List<ItemWithBookingsDto> getAllByOwner(@RequestHeader(USER_ID_HEADER) Long userId) {
         return itemService.getAllByOwner(userId);
     }
 
@@ -54,5 +56,12 @@ public class ItemController {
     public List<ItemDto> search(@RequestParam String text) {
         log.info("ItemController: method search, text - {}", text);
         return itemService.search(text);
+    }
+
+    @PostMapping("/{itemId}/comment")
+    public CommentDto addComment(@RequestHeader(USER_ID_HEADER) Long userId,
+                                 @PathVariable Long itemId,
+                                 @Valid @RequestBody NewCommentRequest request) {
+        return itemService.addComment(userId, itemId, request);
     }
 }

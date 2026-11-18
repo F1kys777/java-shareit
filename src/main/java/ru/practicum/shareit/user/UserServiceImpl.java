@@ -53,7 +53,7 @@ public class UserServiceImpl implements UserService {
             user.setName(userDto.getName());
         }
 
-        User updated = userRepository.update(user);
+        User updated = userRepository.save(user);
         UserDto userList = UserMapper.toUserDto(updated);
         log.info("UserServiceImpl: method update, результат - {}", userList);
         return userList;
